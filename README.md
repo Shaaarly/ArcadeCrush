@@ -17,29 +17,35 @@ Este proyecto es una versión del clásico juego Arkanoid, inspirado en el juego
 - Menú de Pausa
 - Menú Principal
 
-El desarrollo está en progreso y se están agregando más características.
-
 ## Instalación
 
-Instrucciones paso a paso sobre cómo configurar tu entorno de desarrollo local.
+### Configuración del entorno de desarrollo local:
 
-```bash
-# Clona el repositorio
-git clone https://github.com/shaaarly/arkanoid.git
+1. **Clona el repositorio:**
 
-# Abre el proyecto con tu IDE favorito
-Botón derecho en la carpeta del proyecto y dale a abrir con y elige tu IDE
-```
+   ```bash
+   git clone https://github.com/shaaarly/arkanoid.git
+
+2. **Abre el proyecto con tu IDE favorito:**
+
+   Botón derecho en la carpeta del proyecto y dale a abrir con y elige tu IDE```bash
+   git clone https://github.com/shaaarly/arkanoid.git
+
 
 ## USO
 
-Si estás en VSCode
-# Lanza tu servidor en local
-cmd+L + cmd+O // ctrl+L + ctrl+O
-ó
-Dale botón derecho al archivo index.html y da click en 'Open with Live Server'
+### Instrucciones para lanzar el servidor local:
 
-# Abre tu navegador y visita http://localhost:3000 o la URL adecuada
+Si estás usando VSCode:
+
+1. **Lanza tu servidor local:**
+
+   - Usa la extensión Live Server para abrir el archivo `index.html` en tu navegador.
+
+2. **Abre tu navegador y visita:**
+
+   [http://localhost:3000](http://localhost:3000) o la URL adecuada.
+
 
 ## Contribuciones
 
@@ -86,5 +92,7 @@ Este proyecto ha sido desarrollado siguiendo el tutorial de [Midu en YouTube]([h
 
 ## Contacto
 
+Carles Tur - @tccarles - carlesturcardona@gmail.com
 
+Enlace al proyecto: https://github.com/shaaarly/arkanoid
 
