@@ -13,6 +13,7 @@ const $startButton = document.querySelector('#start-button');
 const $difficultySelect = document.querySelector('#difficulty');
 const $backgroundSelect = document.querySelector('#background');
 const $customizeButton = document.querySelector('#customize-button');
+const difficulty = 'easy';
 
 /* VARIABLES DE LA PELOTA */
 const ballRadius = 4;
@@ -49,7 +50,7 @@ const BRICK_STATUS = {
 const $pauseMenu = document.createElement('div');
 $pauseMenu.id = 'pause-menu';
 $pauseMenu.innerHTML = `
-    <h2>Game Paused</h2>
+    <h2>Partida Pausada</h2>
     <button id="resume-button" class="boton">Reanudar</button>
     <button id="quit-button"  class="boton">Salir al Menú</button>
 `;
@@ -64,8 +65,8 @@ $victoryMessage.classList.add('pause-menu');
 $victoryMessage.id = 'victory-message';
 $victoryMessage.innerHTML = `
     <h2>¡Has ganado la partida!</h2>
-    <button id="play-again-button">Jugar de nuevo</button>
-    <button id="main-menu-button">Ir al menú principal</button>
+    <button id="play-again-button" class="boton">Jugar de nuevo</button>
+    <button id="main-menu-button" class="boton">Ir al menú principal</button>
 `;
 $victoryMessage.style.display = 'none'; // Ocultar mensaje al inicio
 document.body.appendChild($victoryMessage);
@@ -94,39 +95,116 @@ let animationId;
 let score = 0;
 const $scoreDisplay = document.createElement('div');
 $scoreDisplay.id = 'score';
+$scoreDisplay.classList.add('score');
 $scoreDisplay.innerHTML = `Score: ${score}`;
-document.body.appendChild($scoreDisplay);
 
 function updateScore(points) {
     score += points;
     $scoreDisplay.innerHTML = `Score: ${score}`;
 }
+function drawScore() {
+    const cornerRadius = 5; // Radio de la esquina para el borde redondeado
+
+    // Definir el estilo del fondo
+    ctx.fillStyle = 'rgb(156, 0, 156)'; // Color del fondo
+
+    // Dibujar el fondo con bordes redondeados detrás del texto
+    const textWidth = ctx.measureText(`Score: ${score}`).width;
+    const backgroundX = (canvas.width / 2) - 5;
+    const backgroundY = 20 - 16;
+    const backgroundWidth = textWidth + 10;
+    const backgroundHeight = 16 + 5;
+
+    ctx.beginPath();
+    ctx.moveTo(backgroundX + cornerRadius, backgroundY);
+    ctx.lineTo(backgroundX + backgroundWidth - cornerRadius, backgroundY);
+    ctx.arcTo(backgroundX + backgroundWidth, backgroundY, backgroundX + backgroundWidth, backgroundY + cornerRadius, cornerRadius);
+    ctx.lineTo(backgroundX + backgroundWidth, backgroundY + backgroundHeight - cornerRadius);
+    ctx.arcTo(backgroundX + backgroundWidth, backgroundY + backgroundHeight, backgroundX + backgroundWidth - cornerRadius, backgroundY + backgroundHeight, cornerRadius);
+    ctx.lineTo(backgroundX + cornerRadius, backgroundY + backgroundHeight);
+    ctx.arcTo(backgroundX, backgroundY + backgroundHeight, backgroundX, backgroundY + backgroundHeight - cornerRadius, cornerRadius);
+    ctx.lineTo(backgroundX, backgroundY + cornerRadius);
+    ctx.arcTo(backgroundX, backgroundY, backgroundX + cornerRadius, backgroundY, cornerRadius);
+    ctx.closePath();
+
+    ctx.fill();
+
+    // Dibujar el texto del puntaje
+    ctx.font = '16px Arial';
+    ctx.fillStyle = '#fff'; // Color del texto blanco
+    ctx.fillText(`Score: ${score}`, (canvas.width / 2), 20); // Ajusta la posición según tus necesidades
+}
+
 
 
 // Mostrar el menú al inicio
 $menuContainer.classList.remove('hidden');
 
 // Eventos del menú
-$startButton.addEventListener('click', startGame);
+$startButton.addEventListener('click', function () {
+    // Ocultar el menú principal al iniciar el juego
+    $menuContainer.classList.add('hidden');
+    startGame();
+});
+
 
 // Eventos para la pausa
 document.addEventListener('keydown', keyDownHandler);
 
 $resumeButton.addEventListener('click', resumeGame);
 $quitButton.addEventListener('click', quitToMenu);
-$playAgainButton.addEventListener('click', playAgain);
+$playAgainButton.addEventListener('click', startGame);
 $mainMenuButton.addEventListener('click', quitToMenu);
-$playAgainButtonLoose.addEventListener('click', playAgain);
+$playAgainButtonLoose.addEventListener('click', startGame);
 $mainMenuButtonLoose.addEventListener('click', quitToMenu);
+$difficultySelect.addEventListener('change', function () {
+    const difficulty = $difficultySelect.value;
+
+    switch (difficulty) {
+        case 'easy':
+            dx = -3;
+            dy = -3;
+            break;
+        case 'medium':
+            dx = -5;
+            dy = -5;
+            break;
+        case 'hard':
+            dx = -7;
+            dy = -7;
+            break;
+        default:
+            dx = -3;
+            dy = -3;
+            break;
+    }
+});
+
 
 /* FUNCIONES DEL JUEGO */
 
 function startGame() {
-    $menuContainer.classList.add('hidden');
-    $victoryMessage.classList.add('hidden');
-    $looseMessage.classList.add('hidden');
-    gamePaused = false;
-    resetGame();
+    // Hide victory and defeat messages
+    $victoryMessage.style.display = 'none';
+    $looseMessage.style.display = 'none';
+
+    // Reset score
+    score = 0;
+    $scoreDisplay.innerHTML = `Score: ${score}`;
+
+    // Reset bricks
+    for (let c = 0; c < brickColumnCount; c++) {
+        for (let r = 0; r < brickRowCount; r++) {
+            bricks[c][r].status = BRICK_STATUS.ACTIVE;
+        }
+    }
+
+    // Reset ball and paddle positions
+    x = canvas.width / 2;
+    y = canvas.height - 30;
+    paddleX = (canvas.width - paddleWidth) / 2;
+
+    // Restart animation loop
     animationId = requestAnimationFrame(draw);
 }
 
@@ -173,12 +251,6 @@ function quitToMenu() {
     $menuContainer.classList.remove('hidden');
     gamePaused = false;
     cancelAnimationFrame(animationId);
-}
-
-function playAgain() {
-    $victoryMessage.style.display = 'none';
-    $looseMessage.style.display = 'none';
-    startGame();
 }
 
 function showMessage(message) {
@@ -322,7 +394,19 @@ function ballMovement() {
     // Colisión con la paleta
     if (y + dy > canvas.height - ballRadius - paddleHeight) {
         if (x > paddleX && x < paddleX + paddleWidth) {
-            dy = -dy;
+            // Calcular el punto de impacto relativo en la paleta
+            const impactPoint = x - (paddleX + paddleWidth / 2);
+            // Normalizar el impacto para obtener un valor entre -1 y 1
+            const normalizedImpact = impactPoint / (paddleWidth / 2);
+            // Definir el ángulo de rebote basado en el punto de impacto
+            const angle = normalizedImpact * Math.PI / 3; // Ángulo máximo de 60 grados
+
+            // Calcular la velocidad original
+            const speed = Math.sqrt(dx * dx + dy * dy);
+
+            // Modificar la dirección x y y basado en el ángulo calculado
+            dx = Math.sin(angle) * speed;
+            dy = -Math.cos(angle) * speed;
         } else {
             // Si la pelota toca la parte inferior sin colisionar con la paleta
             showMessage('loose');
@@ -332,6 +416,7 @@ function ballMovement() {
         }
     }
 }
+
 
 function paddleMovement() {
     if (rightPressed && paddleX < canvas.width - paddleWidth) {
@@ -351,14 +436,31 @@ function initEvents() {
 }
 
 function resetGame() {
-    $looseMessage.classList.add("hidden");
+    // Resetear las posiciones y estados del juego
     x = canvas.width / 2;
     y = canvas.height - 30;
-    dx = -3;
-    dy = -3;
+    switch (difficulty) {
+        case 'easy':
+            dx = -3;
+            dy = -3;
+            break;
+        case 'medium':
+            dx = -5;
+            dy = -5;
+            break;
+        case 'hard':
+            dx = -7;
+            dy = -7;
+            break;
+        default:
+            dx = -3;
+            dy = -3;
+            break;
+    }
 
     paddleX = (canvas.width - paddleWidth) / 2;
 
+    // Reiniciar el estado de los ladrillos
     for (let c = 0; c < brickColumnCount; c++) {
         for (let r = 0; r < brickRowCount; r++) {
             bricks[c][r].status = BRICK_STATUS.ACTIVE;
@@ -374,7 +476,13 @@ let frames = 0;
 let framesPerSec = fps;
 
 function draw() {
-    if (gamePaused) return;
+    if (gamePaused) {
+        return;
+    } else {
+        if (!gamePaused) {
+
+        }
+    }
 
     $victoryMessage.classList.add("hidden")
     $looseMessage.classList.add("hidden")
@@ -403,13 +511,13 @@ function draw() {
     drawPaddle();
     drawBricks();
     drawUI();
+    drawScore();
 
     collisionDetection();
     ballMovement();
     paddleMovement();
 }
 
-
+$menuContainer.classList.remove('hidden');
 draw();
 initEvents();
-$menuContainer.classList.remove('hidden');
