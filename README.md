@@ -1,4 +1,4 @@
-# Arkanoid
+# Arkanoid - Collaborative
 
 ## Índice
 1. [Descripción](#descripción)
@@ -10,7 +10,7 @@
 
 ## Descripción
 
-Este proyecto es una versión del clásico juego Arkanoid, inspirado en el juego original BreakPoint y desarrollado siguiendo el tutorial de Midu.
+Este proyecto es una versión del clásico juego Arkanoid. Es de código abierto y colaborativo para quien quiera implementar mejoras.
 
 ## Funcionalidades Actuales
 - Inicio del Juego
