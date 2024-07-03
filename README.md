@@ -1,6 +1,6 @@
 a# ArcadeCrush - Collaborative
 
-[Demo App]([https://arcadecrush.netlify.app/](https://arcadecrush.netlify.app/))
+[Demo App]([https://arcadecrush.netlify.app/])
 
 ## Índice
 1. [Descripción](#descripción)
