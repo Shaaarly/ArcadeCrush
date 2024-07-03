@@ -2,10 +2,10 @@
 
     --mainColor: rgb(12, 75, 124);
     --secColor: rgb(0, 204, 235);
-    --altColor: rgb(145, 0, 145);
-    --secAltColor: rgb(255, 17, 255);
+    /* --mainColor: rgb(145, 0, 145);
+    --secColor: rgb(255, 17, 255); */
     --menuColor: rgba(255, 255, 255, 0.6);
-    --mainMenuColor: rgba(0, 0, 0, 0.7);
+    --mainMenuColor: rgb(0, 0, 0);
     --mainFont: "Silkscreen", sans-serif;
     --secFont: "Audiowide", sans-serif;
 
@@ -28,23 +28,22 @@ h2 {
     font-weight: 600;
     font-style: normal;
     font-size: 50px;
-    color: var(--secColor);
+    color: var(--mainColor);
 
     span {
-        color: var(--altColor);
+        color: var(--secColor);
     }
 }
 
 h2 {
     font-weight: 200;
-    color: var(--mainColor);
 }
 
 
 canvas {
     border: 4px solid #fff;
     border-bottom: transparent;
-    background: url('./img/bg.jpg') no-repeat;
+    background: url('./img/bg-1.jpg') no-repeat;
     background-size: cover;
     background-position: center center;
     margin: 0 auto;
@@ -140,7 +139,7 @@ button {
     font-family: var(--secFont);
 
     &:hover {
-        background-color: var(--secAltColor);
+        background-color: var(--secColor);
     }
 }
 
@@ -198,14 +197,14 @@ button {
     color: var(--secColor);
     text-decoration: none;
     padding: 20px;
-    background-color: var(--mainMenuColor);
+    background-color: rgba(0, 0, 0, 0.5);
     border-radius: 5px;
     width: 100px;
     margin: 0 auto;
 
     &:hover {
         cursor: pointer;
-        color: var(--secAltColor);
+        color: var(--mainColor);
     }
 
 }

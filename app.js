@@ -9,36 +9,34 @@ canvas.height = 500;
 
 /* VARIABLES DEL MENU */
 const $menuContainer = document.querySelector('#menu-container');
-const $startButton = document.querySelector('#start-button');
-const $difficultySelect = document.querySelector('#difficulty');
+const $startButton = document.querySelector('#new-game');
 const $backgroundSelect = document.querySelector('#background');
 const $customizeButton = document.querySelector('#customize-button');
-const difficulty = 'easy';
 
 /* VARIABLES DE LA PELOTA */
 const ballRadius = 4;
 let x = canvas.width / 2;
-let y = canvas.height - 30;
-let dx = -3;
-let dy = -3;
+let y = canvas.height - 20;
+let dx = -5;
+let dy = -5;
 
 /* VARIABLES DE LA PALETA */
-const PADDLE_SENSITIVITY = 8;
+const PADDLE_SENSITIVITY = 9;
 const paddleHeight = 10;
-const paddleWidth = 50;
+const paddleWidth = 120;
 let paddleX = (canvas.width - paddleWidth) / 2;
 let paddleY = canvas.height - paddleHeight - 10;
 let rightPressed = false;
 let leftPressed = false;
 
 /* VARIABLES DE LOS LADRILLOS */
-const brickRowCount = 6;
-const brickColumnCount = 15;
+const brickRowCount = 9;
+const brickColumnCount = 18;
 const brickWidth = 32;
 const brickHeight = 14;
 const brickPadding = 2;
 const brickOffsetTop = 70;
-const brickOffsetLeft = 60;
+const brickOffsetLeft = 5;
 const bricks = [];
 
 const BRICK_STATUS = {
@@ -50,7 +48,7 @@ const BRICK_STATUS = {
 const $pauseMenu = document.createElement('div');
 $pauseMenu.id = 'pause-menu';
 $pauseMenu.innerHTML = `
-    <h2>Partida Pausada</h2>
+    <h2>Partida <span>Pausada</span></h2>
     <button id="resume-button" class="boton">Reanudar</button>
     <button id="quit-button"  class="boton">Salir al Menú</button>
 `;
@@ -64,7 +62,7 @@ const $victoryMessage = document.createElement('div');
 $victoryMessage.classList.add('pause-menu');
 $victoryMessage.id = 'victory-message';
 $victoryMessage.innerHTML = `
-    <h2>¡Has ganado la partida!</h2>
+    <h2>¡Has <span>ganado</span> la partida!</h2>
     <button id="play-again-button" class="boton">Jugar de nuevo</button>
     <button id="main-menu-button" class="boton">Ir al menú principal</button>
 `;
@@ -76,7 +74,7 @@ const $looseMessage = document.createElement('div');
 $looseMessage.classList.add('pause-menu');
 $looseMessage.id = 'loose-message';
 $looseMessage.innerHTML = `
-    <h2>¡Lástima, inténtalo de nuevo!</h2>
+    <h2>¡<span>Lástima</span>, inténtalo de nuevo!</h2>
     <button id="play-again-button-loose" class="boton">Jugar de nuevo</button>
     <button id="main-menu-button-loose" class="boton">Ir al menú principal</button>
 `;
@@ -90,6 +88,29 @@ const $mainMenuButtonLoose = document.querySelector('#main-menu-button-loose');
 
 let gamePaused = false;
 let animationId;
+
+/* Niveles del juego  */
+const levels = [
+    // Nivel 1
+    [
+        [0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+        [0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0],
+        [0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0],
+        [1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 0],
+        [1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0],
+        [0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0],
+        [1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1]
+    ],
+    // Nivel 2
+    [
+        [1, 0, 1, 0, 1],
+        [1, 1, 1, 1, 1],
+        [0, 1, 0, 1, 0]
+    ],
+    // Otros niveles...
+];
 
 /* VARIABLES PARA EL SCORE */
 let score = 0;
@@ -142,8 +163,7 @@ $menuContainer.classList.remove('hidden');
 
 // Eventos del menú
 $startButton.addEventListener('click', function () {
-    // Ocultar el menú principal al iniciar el juego
-    $menuContainer.classList.add('hidden');
+
     startGame();
 });
 
@@ -157,37 +177,15 @@ $playAgainButton.addEventListener('click', startGame);
 $mainMenuButton.addEventListener('click', quitToMenu);
 $playAgainButtonLoose.addEventListener('click', startGame);
 $mainMenuButtonLoose.addEventListener('click', quitToMenu);
-$difficultySelect.addEventListener('change', function () {
-    const difficulty = $difficultySelect.value;
-
-    switch (difficulty) {
-        case 'easy':
-            dx = -3;
-            dy = -3;
-            break;
-        case 'medium':
-            dx = -5;
-            dy = -5;
-            break;
-        case 'hard':
-            dx = -7;
-            dy = -7;
-            break;
-        default:
-            dx = -3;
-            dy = -3;
-            break;
-    }
-});
-
 
 /* FUNCIONES DEL JUEGO */
 
 function startGame() {
+    // Ocultar el menú principal al iniciar el juego
+    $menuContainer.classList.add('hidden');
     // Hide victory and defeat messages
     $victoryMessage.style.display = 'none';
     $looseMessage.style.display = 'none';
-
     // Reset score
     score = 0;
     $scoreDisplay.innerHTML = `Score: ${score}`;
@@ -204,6 +202,7 @@ function startGame() {
     y = canvas.height - 30;
     paddleX = (canvas.width - paddleWidth) / 2;
 
+    gamePaused = false;
     // Restart animation loop
     animationId = requestAnimationFrame(draw);
 }
@@ -301,18 +300,26 @@ function drawBall() {
 }
 
 function drawPaddle() {
+    // const spriteWidth = 46; // Ancho original de la imagen del paddle en el sprite
+    // const spriteHeight = 1; // Altura original de la imagen del paddle en el sprite
+    const spriteWidth = 585; // Ancho original de la imagen del paddle en el sprite
+    const spriteHeight = 210; // Altura original de la imagen del paddle en el sprite
+    const scaleX = paddleWidth / spriteWidth; // Factor de escala para el ancho
+    const scaleY = paddleHeight / spriteHeight; // Factor de escala para la altura
+
     ctx.drawImage(
         $sprite,
-        29,
-        174,
-        paddleWidth,
-        paddleHeight,
-        paddleX,
-        paddleY,
-        paddleWidth,
-        paddleHeight
+        0, // Posición x en el sprite
+        0, // Posición y en el sprite
+        spriteWidth, // Ancho original en el sprite
+        spriteHeight, // Altura original en el sprite
+        paddleX, // Posición x en el canvas
+        paddleY, // Posición y en el canvas
+        paddleWidth, // Ancho en el canvas (escala según el tamaño del paddle)
+        paddleHeight // Altura en el canvas (escala según el tamaño del paddle)
     );
 }
+
 
 function drawBricks() {
     for (let c = 0; c < brickColumnCount; c++) {
@@ -342,38 +349,43 @@ function drawUI() {
 }
 
 function collisionDetection() {
-    for (let c = 0; c < brickColumnCount; c++) {
-        for (let r = 0; r < brickRowCount; r++) {
-            const currentBrick = bricks[c][r];
-            if (currentBrick.status === BRICK_STATUS.DESTROYED) continue;
+    let counter = 0;
+    do {
 
-            const ballCenterX = x;
-            const ballCenterY = y;
-            const brickCenterX = currentBrick.x + brickWidth / 2;
-            const brickCenterY = currentBrick.y + brickHeight / 2;
-            const distX = Math.abs(ballCenterX - brickCenterX);
-            const distY = Math.abs(ballCenterY - brickCenterY);
-            const halfBrickWidth = brickWidth / 2;
-            const halfBrickHeight = brickHeight / 2;
-            const halfBallWidth = ballRadius;
-            const halfBallHeight = ballRadius;
+        for (let c = 0; c < brickColumnCount; c++) {
+            for (let r = 0; r < brickRowCount; r++) {
+                const currentBrick = bricks[c][r];
+                if (currentBrick.status === BRICK_STATUS.DESTROYED) continue;
 
-            if (distX <= halfBrickWidth + halfBallWidth && distY <= halfBrickHeight + halfBallHeight) {
-                currentBrick.status = BRICK_STATUS.DESTROYED;
-                updateScore(10); // Incrementa la puntuación en 10 puntos por cada ladrillo destruido
-                checkGameEnd();
+                const ballCenterX = x;
+                const ballCenterY = y;
+                const brickCenterX = currentBrick.x + brickWidth / 2;
+                const brickCenterY = currentBrick.y + brickHeight / 2;
+                const distX = Math.abs(ballCenterX - brickCenterX);
+                const distY = Math.abs(ballCenterY - brickCenterY);
+                const halfBrickWidth = brickWidth / 2;
+                const halfBrickHeight = brickHeight / 2;
+                const halfBallWidth = ballRadius;
+                const halfBallHeight = ballRadius;
 
-                const overlapX = halfBrickWidth + halfBallWidth - distX;
-                const overlapY = halfBrickHeight + halfBallHeight - distY;
+                if (distX <= halfBrickWidth + halfBallWidth && distY <= halfBrickHeight + halfBallHeight) {
+                    counter++;
+                    currentBrick.status = BRICK_STATUS.DESTROYED;
+                    updateScore(10); // Incrementa la puntuación en 10 puntos por cada ladrillo destruido
+                    checkGameEnd();
 
-                if (overlapX >= overlapY) {
-                    dy = -dy;
-                } else {
-                    dx = -dx;
+                    const overlapX = halfBrickWidth + halfBallWidth - distX;
+                    const overlapY = halfBrickHeight + halfBallHeight - distY;
+
+                    if (overlapX >= overlapY) {
+                        dy = -dy;
+                    } else {
+                        dx = -dx;
+                    }
                 }
             }
         }
-    }
+    } while ($counter = 0)
 }
 
 
@@ -439,24 +451,6 @@ function resetGame() {
     // Resetear las posiciones y estados del juego
     x = canvas.width / 2;
     y = canvas.height - 30;
-    switch (difficulty) {
-        case 'easy':
-            dx = -3;
-            dy = -3;
-            break;
-        case 'medium':
-            dx = -5;
-            dy = -5;
-            break;
-        case 'hard':
-            dx = -7;
-            dy = -7;
-            break;
-        default:
-            dx = -3;
-            dy = -3;
-            break;
-    }
 
     paddleX = (canvas.width - paddleWidth) / 2;
 
@@ -518,6 +512,5 @@ function draw() {
     paddleMovement();
 }
 
-$menuContainer.classList.remove('hidden');
-draw();
+quitToMenu();
 initEvents();

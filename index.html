@@ -4,8 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BreakPoint with JavaScript</title>
+    <title>ArcadeCrush with JavaScript</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Silkscreen:wght@400;700&display=swap"
+        rel="stylesheet">
 </head>
 
 <body>
@@ -14,34 +18,18 @@
 
         <canvas></canvas>
 
-        <img hidden id="sprite" src="./img/sprite.png" alt="Sprite BreakPoint">
-        <img hidden id="bricks" src="./img/bricks.png" alt="Sprite Bricks BreakPoint">
+        <img hidden id="sprite" src="./img/sprites.png" alt="Sprite ArcadeCrush">
+        <img hidden id="bricks" src="./img/bricks.png" alt="Sprite Bricks ArcadeCrush">
         <img hidden id="powerups" src="./img/powerups.jpg" alt="Sprite Powerups Arkanoid" />
 
         <div id="menu-container" class="hidden">
             <div id="menu">
-                <h2>BreakPoint Menu</h2>
-                <button id="start-button">Start Game</button>
-                <hr>
-                <h3>Settings</h3>
-                <div class="campo">
-                    <label for="difficulty">Difficulty:</label>
-                    <select id="difficulty">
-                        <option value="easy">Easy</option>
-                        <option value="medium">Medium</option>
-                        <option value="hard">Hard</option>
-                    </select>
-                </div>
-                <div class="campo">
-
-                    <label for="background">Background:</label>
-                    <select id="background">
-                        <option value="black">Black</option>
-                        <option value="blue">Blue</option>
-                        <option value="green">Green</option>
-                    </select>
-                </div>
-                <button id="customize-button">Customize</button>
+                <h1>Arcade<span>Crush</span></h1>
+                <ul>
+                    <li class="enlaces-menu" id="new-game">New Game</li>
+                    <li class="enlaces-menu" id="settings">Settings</li>
+                    <li class="enlaces-menu" id="exit">Exit</li>
+                </ul>
             </div>
         </div>
     </div>
