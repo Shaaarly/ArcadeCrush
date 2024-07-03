@@ -1,6 +1,6 @@
 a# ArcadeCrush - Collaborative
 
-[![Netlify Status](https://api.netlify.com/api/v1/badges/81f1f014-9cbf-427a-b789-5f0df2e46ede/deploy-status)]([https://app.netlify.com/sites/arcadecrush/deploys](https://arcadecrush.netlify.app/))
+[![Netlify Status](https://arcadecrush.netlify.app/)
 
 ## Índice
 1. [Descripción](#descripción)
