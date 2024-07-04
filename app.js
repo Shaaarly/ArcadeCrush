@@ -2,19 +2,26 @@ const canvas = document.querySelector('canvas');
 const ctx = canvas.getContext('2d');
 
 const $sprite = document.querySelector('#sprite');
+const $sprites = document.querySelector('#sprites');
 const $bricks = document.querySelector('#bricks');
 
-canvas.width = 620;
-canvas.height = 500;
+// Función para ajustar el tamaño del canvas
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+// Ajustar el tamaño del canvas al cargar la página
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
 
 /* VARIABLES DEL MENU */
 const $menuContainer = document.querySelector('#menu-container');
 const $startButton = document.querySelector('#new-game');
-const $backgroundSelect = document.querySelector('#background');
+const $backgroundSelwect = document.querySelector('#background');
 const $customizeButton = document.querySelector('#customize-button');
 
 /* VARIABLES DE LA PELOTA */
-const ballRadius = 4;
+const ballRadius = 5;
 let x = canvas.width / 2;
 let y = canvas.height - 20;
 let dx = -5;
@@ -30,13 +37,22 @@ let rightPressed = false;
 let leftPressed = false;
 
 /* VARIABLES DE LOS LADRILLOS */
-const brickRowCount = 9;
+const totalBrickWidth = 0.8 * canvas.width;
+const totalBrickHeight = 0.4 * canvas.height;
 const brickColumnCount = 18;
-const brickWidth = 32;
-const brickHeight = 14;
-const brickPadding = 2;
-const brickOffsetTop = 70;
-const brickOffsetLeft = 5;
+const brickRowCount = 9;
+const brickPadding = totalBrickWidth * 0.05 / brickColumnCount;
+const brickWidth = (totalBrickWidth - brickPadding * (brickColumnCount - 1)) / brickColumnCount;
+const brickHeight = (totalBrickHeight - brickPadding * (brickRowCount - 1)) / brickRowCount;
+const brickOffsetTop = 0.1 * canvas.height;
+const brickOffsetLeft = (canvas.width - totalBrickWidth) / 2;
+// const brickRowCount = 9;
+// const brickColumnCount = 18;
+// const brickWidth = 32;
+// const brickHeight = 14;
+// const brickPadding = 4;
+// const brickOffsetTop = 70;
+// const brickOffsetLeft = 5;
 const bricks = [];
 
 const BRICK_STATUS = {
@@ -156,21 +172,204 @@ function drawScore() {
     ctx.fillText(`Score: ${score}`, (canvas.width / 2), 20); // Ajusta la posición según tus necesidades
 }
 
+/* FUNCIONES DEL JUEGO */
+function drawBall() {
+    ctx.beginPath();
+    ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+    ctx.closePath();
+}
 
+function drawPaddle() {
+    // const spriteWidth = 46; // Ancho original de la imagen del paddle en el sprite
+    // const spriteHeight = 1; // Altura original de la imagen del paddle en el sprite
+    const spriteWidth = 585; // Ancho original de la imagen del paddle en el sprite
+    const spriteHeight = 210; // Altura original de la imagen del paddle en el sprite
+    const scaleX = paddleWidth / spriteWidth; // Factor de escala para el ancho
+    const scaleY = paddleHeight / spriteHeight; // Factor de escala para la altura
+
+    ctx.drawImage(
+        $sprite,
+        0, // Posición x en el sprite
+        0, // Posición y en el sprite
+        spriteWidth, // Ancho original en el sprite
+        spriteHeight, // Altura original en el sprite
+        paddleX, // Posición x en el canvas
+        paddleY, // Posición y en el canvas
+        paddleWidth, // Ancho en el canvas (escala según el tamaño del paddle)
+        paddleHeight // Altura en el canvas (escala según el tamaño del paddle)
+    );
+}
+
+
+function drawBricks() {
+    for (let c = 0; c < brickColumnCount; c++) {
+        for (let r = 0; r < brickRowCount; r++) {
+            const currentBrick = bricks[c][r];
+            if (currentBrick.status === BRICK_STATUS.DESTROYED) continue;
+
+            const clipX = currentBrick.color * 32;
+
+            ctx.drawImage(
+                $sprite,
+                clipX,
+                100,
+                brickWidth * 3.5,
+                brickHeight * 1.5,
+                currentBrick.x,
+                currentBrick.y,
+                brickWidth,
+                brickHeight
+            );
+        }
+    }
+}
+
+// function drawUI() {
+//     ctx.fillText(`FPS: ${framesPerSec}`, 5, 10);
+// }
+
+function collisionDetection() {
+    let counter = 1;
+    do {
+
+        for (let c = 0; c < brickColumnCount; c++) {
+            for (let r = 0; r < brickRowCount; r++) {
+                const currentBrick = bricks[c][r];
+                if (currentBrick.status === BRICK_STATUS.DESTROYED) continue;
+
+                const ballCenterX = x;
+                const ballCenterY = y;
+                const brickCenterX = currentBrick.x + brickWidth / 2;
+                const brickCenterY = currentBrick.y + brickHeight / 2;
+                const distX = Math.abs(ballCenterX - brickCenterX);
+                const distY = Math.abs(ballCenterY - brickCenterY);
+                const halfBrickWidth = brickWidth / 2;
+                const halfBrickHeight = brickHeight / 2;
+                const halfBallWidth = ballRadius;
+                const halfBallHeight = ballRadius;
+
+                if (distX < halfBrickWidth + halfBallWidth && distY < halfBrickHeight + halfBallHeight && $counter < 2) {
+                    counter++;
+                    currentBrick.status = BRICK_STATUS.DESTROYED;
+                    updateScore(10); // Incrementa la puntuación en 10 puntos por cada ladrillo destruido
+                    checkGameEnd();
+
+                    const overlapX = halfBrickWidth + halfBallWidth - distX;
+                    const overlapY = halfBrickHeight + halfBallHeight - distY;
+
+                    if (overlapX >= overlapY) {
+                        dy = -dy;
+                        dx = dx;
+                    } else {
+                        dx = -dx;
+                        dy = dy;
+                    }
+                }
+            }
+        }
+    } while ($counter = 0)
+}
+// Función para copiar el estado actual de los ladrillos
+function copyBricksState() {
+    let copiedBricks = [];
+    for (let c = 0; c < brickColumnCount; c++) {
+        copiedBricks[c] = [];
+        for (let r = 0; r < brickRowCount; r++) {
+            copiedBricks[c][r] = { ...bricks[c][r] }; // Copiar cada objeto ladrillo (importante para no modificar el original)
+        }
+    }
+    return copiedBricks;
+}
+// Función para dibujar los ladrillos en el canvas usando la variable copiada
+function drawBricksCopy(copiedBricks) {
+    const brickWidth = 75;
+    const brickHeight = 20;
+    const brickPadding = 10;
+    const brickOffsetTop = 30;
+    const brickOffsetLeft = 30;
+
+    for (let c = 0; c < brickColumnCount; c++) {
+        for (let r = 0; r < brickRowCount; r++) {
+            if (copiedBricks[c][r].status === 'active') {
+
+                const clipX = currentBrick.color * 32;
+
+                ctx.drawImage(
+                    $sprite,
+                    clipX,
+                    100,
+                    brickWidth * 3.5,
+                    brickHeight * 1.5,
+                    currentBrick.x,
+                    currentBrick.y,
+                    brickWidth,
+                    brickHeight
+                );
+            }
+        }
+    }
+}
+
+
+function draw() {
+
+    $victoryMessage.classList.add("hidden")
+    $looseMessage.classList.add("hidden")
+    $menuContainer.classList.add("hidden")
+
+    animationId = window.requestAnimationFrame(draw);
+
+    // const msNow = window.performance.now();
+    // const msPassed = msNow - msPrev;
+
+    // if (msPassed < msPerFrame) return;
+
+    // const excessTime = msPassed % msPerFrame;
+    // msPrev = msNow - excessTime;
+
+    // frames++;
+
+    // if (msFPSPrev < msNow) {
+    //     msFPSPrev = window.performance.now() + 1000;
+    //     framesPerSec = frames;
+    //     frames = 0;
+    // }
+
+    cleanCanvas();
+    drawBall();
+    drawPaddle();
+    drawBricks();
+    // drawUI();
+    drawScore();
+
+    collisionDetection();
+    ballMovement();
+    paddleMovement();
+
+}
+
+function showMessage(message) {
+    gamePaused = true;
+    cancelAnimationFrame(animationId);
+    if (message === 'victory') {
+        $victoryMessage.style.display = 'block';
+    } else if (message === 'loose') {
+        $looseMessage.style.display = 'block';
+    }
+}
 
 // Mostrar el menú al inicio
 $menuContainer.classList.remove('hidden');
 
 // Eventos del menú
 $startButton.addEventListener('click', function () {
-
     startGame();
 });
 
-
 // Eventos para la pausa
 document.addEventListener('keydown', keyDownHandler);
-
 $resumeButton.addEventListener('click', resumeGame);
 $quitButton.addEventListener('click', quitToMenu);
 $playAgainButton.addEventListener('click', startGame);
@@ -230,17 +429,55 @@ function keyUpHandler(event) {
         leftPressed = false;
     }
 }
+// Eventos de táctiles
+let touchStartX = null;
+
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    touchStartX = touch.clientX;
+});
+
+canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    // Ajusta la posición de la paleta basada en el movimiento táctil
+    paddleX = touch.clientX - canvas.offsetLeft - paddleWidth / 2;
+    // Asegúrate de que la paleta no se salga del canvas
+    if (paddleX < 0) {
+        paddleX = 0;
+    }
+    if (paddleX > canvas.width - paddleWidth) {
+        paddleX = canvas.width - paddleWidth;
+    }
+});
+
+canvas.addEventListener('touchend', () => {
+    touchStartX = null;
+});
 
 function pauseGame() {
     gamePaused = true;
     $pauseMenu.style.display = 'block';
     cancelAnimationFrame(animationId);
+    // Copiar estado actual de los ladrillos
+    let copiedBricks = copyBricksState();
+    // Dibujar los ladrillos en el canvas usando la variable copiada
+    drawBricksCopy(copiedBricks);
+    initEvents();
 }
 
 function resumeGame() {
     gamePaused = false;
     $pauseMenu.style.display = 'none';
     animationId = requestAnimationFrame(draw);
+    drawBricks();
+    drawBall();
+    // Copiar estado actual de los ladrillos
+    let copiedBricks = copyBricksState();
+    // Dibujar los ladrillos en el canvas usando la variable copiada
+    drawBricksCopy(copiedBricks);
+    initEvents();
 }
 
 function quitToMenu() {
@@ -250,16 +487,7 @@ function quitToMenu() {
     $menuContainer.classList.remove('hidden');
     gamePaused = false;
     cancelAnimationFrame(animationId);
-}
 
-function showMessage(message) {
-    gamePaused = true;
-    cancelAnimationFrame(animationId);
-    if (message === 'victory') {
-        $victoryMessage.style.display = 'block';
-    } else if (message === 'loose') {
-        $looseMessage.style.display = 'block';
-    }
 }
 
 function checkGameEnd() {
@@ -290,104 +518,6 @@ for (let c = 0; c < brickColumnCount; c++) {
         };
     }
 }
-
-function drawBall() {
-    ctx.beginPath();
-    ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
-    ctx.fillStyle = '#fff';
-    ctx.fill();
-    ctx.closePath();
-}
-
-function drawPaddle() {
-    // const spriteWidth = 46; // Ancho original de la imagen del paddle en el sprite
-    // const spriteHeight = 1; // Altura original de la imagen del paddle en el sprite
-    const spriteWidth = 585; // Ancho original de la imagen del paddle en el sprite
-    const spriteHeight = 210; // Altura original de la imagen del paddle en el sprite
-    const scaleX = paddleWidth / spriteWidth; // Factor de escala para el ancho
-    const scaleY = paddleHeight / spriteHeight; // Factor de escala para la altura
-
-    ctx.drawImage(
-        $sprite,
-        0, // Posición x en el sprite
-        0, // Posición y en el sprite
-        spriteWidth, // Ancho original en el sprite
-        spriteHeight, // Altura original en el sprite
-        paddleX, // Posición x en el canvas
-        paddleY, // Posición y en el canvas
-        paddleWidth, // Ancho en el canvas (escala según el tamaño del paddle)
-        paddleHeight // Altura en el canvas (escala según el tamaño del paddle)
-    );
-}
-
-
-function drawBricks() {
-    for (let c = 0; c < brickColumnCount; c++) {
-        for (let r = 0; r < brickRowCount; r++) {
-            const currentBrick = bricks[c][r];
-            if (currentBrick.status === BRICK_STATUS.DESTROYED) continue;
-
-            const clipX = currentBrick.color * 32;
-
-            ctx.drawImage(
-                $bricks,
-                clipX,
-                0,
-                brickWidth,
-                brickHeight,
-                currentBrick.x,
-                currentBrick.y,
-                brickWidth,
-                brickHeight
-            );
-        }
-    }
-}
-
-function drawUI() {
-    ctx.fillText(`FPS: ${framesPerSec}`, 5, 10);
-}
-
-function collisionDetection() {
-    let counter = 0;
-    do {
-
-        for (let c = 0; c < brickColumnCount; c++) {
-            for (let r = 0; r < brickRowCount; r++) {
-                const currentBrick = bricks[c][r];
-                if (currentBrick.status === BRICK_STATUS.DESTROYED) continue;
-
-                const ballCenterX = x;
-                const ballCenterY = y;
-                const brickCenterX = currentBrick.x + brickWidth / 2;
-                const brickCenterY = currentBrick.y + brickHeight / 2;
-                const distX = Math.abs(ballCenterX - brickCenterX);
-                const distY = Math.abs(ballCenterY - brickCenterY);
-                const halfBrickWidth = brickWidth / 2;
-                const halfBrickHeight = brickHeight / 2;
-                const halfBallWidth = ballRadius;
-                const halfBallHeight = ballRadius;
-
-                if (distX <= halfBrickWidth + halfBallWidth && distY <= halfBrickHeight + halfBallHeight) {
-                    counter++;
-                    currentBrick.status = BRICK_STATUS.DESTROYED;
-                    updateScore(10); // Incrementa la puntuación en 10 puntos por cada ladrillo destruido
-                    checkGameEnd();
-
-                    const overlapX = halfBrickWidth + halfBallWidth - distX;
-                    const overlapY = halfBrickHeight + halfBallHeight - distY;
-
-                    if (overlapX >= overlapY) {
-                        dy = -dy;
-                    } else {
-                        dx = -dx;
-                    }
-                }
-            }
-        }
-    } while ($counter = 0)
-}
-
 
 function ballMovement() {
     x += dx;
@@ -462,55 +592,14 @@ function resetGame() {
     }
 }
 
-const fps = 60;
-let msPrev = window.performance.now();
-let msFPSPrev = window.performance.now() + 1000;
-const msPerFrame = 1000 / fps;
-let frames = 0;
-let framesPerSec = fps;
+// const fps = 60;
+// let msPrev = window.performance.now();
+// let msFPSPrev = window.performance.now() + 1000;
+// const msPerFrame = 1000 / fps;
+// let frames = 0;
+// let framesPerSec = fps;
 
-function draw() {
-    if (gamePaused) {
-        return;
-    } else {
-        if (!gamePaused) {
 
-        }
-    }
-
-    $victoryMessage.classList.add("hidden")
-    $looseMessage.classList.add("hidden")
-    $menuContainer.classList.add("hidden")
-
-    animationId = window.requestAnimationFrame(draw);
-
-    const msNow = window.performance.now();
-    const msPassed = msNow - msPrev;
-
-    if (msPassed < msPerFrame) return;
-
-    const excessTime = msPassed % msPerFrame;
-    msPrev = msNow - excessTime;
-
-    frames++;
-
-    if (msFPSPrev < msNow) {
-        msFPSPrev = window.performance.now() + 1000;
-        framesPerSec = frames;
-        frames = 0;
-    }
-
-    cleanCanvas();
-    drawBall();
-    drawPaddle();
-    drawBricks();
-    drawUI();
-    drawScore();
-
-    collisionDetection();
-    ballMovement();
-    paddleMovement();
-}
 
 quitToMenu();
 initEvents();
